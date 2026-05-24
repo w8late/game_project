@@ -1,5 +1,6 @@
 import pygame
 
+#helper
 def ray_vs_rect(ray_origin, ray_dir, target):
     if ray_dir.x == 0 or ray_dir.y == 0:
         raise ZeroDivisionError
@@ -71,8 +72,7 @@ class Player:
         keys = pygame.key.get_pressed()
         self.velocity.x *= 0.9
 
-        #WASD or arrow keys affect velocity
-       
+        #Basic Controls: WASD or arrow keys
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
             self.velocity.x += -25
             
@@ -81,14 +81,18 @@ class Player:
         if keys[pygame.K_UP] or keys[pygame.K_w]:
             self.jump()
         self.velocity.y += GRAVITY  * dt 
+        
         #detect and resolve collision against each platform
         for p in level.platforms:
             (collision, point, normal, time) = self._vs_rect(p, dt)
             if collision:
                 self.velocity -= self.velocity.dot(normal) * pygame.Vector2(normal)
+                #if the surface normal of the collided object is up, we're on the ground
                 if normal[1] == -1:
                     self.is_grounded = True
 
+                #If we have collided with an object on it's left or right side and we're not grounded,
+                # we can wall jump
                 if normal[0] != 0 and not self.is_grounded:
                     self.can_wall_jump = True
                     self.wall_surface_normal = normal[0]
@@ -106,7 +110,8 @@ class Player:
         
         if keys[pygame.K_r] or level.finished:
             self.spawned = False 
-    
+
+    #Swept AABB collision
     def _vs_rect(self, other, dt):
         if self.velocity.x == 0 and self.velocity.y == 0:
             return (False, None, None, None)
